@@ -140,6 +140,21 @@ const practiceItems: PracticeItem[] = [
   },
 ]
 
+const leaderboard = [
+  { name: 'Archivist Maple', earnings: '¥2,480', accuracy: '96%' },
+  { name: 'You', earnings: '¥1,920', accuracy: '89%' },
+  { name: 'Deputy Lin', earnings: '¥1,870', accuracy: '87%' },
+  { name: 'Clerk No. 7', earnings: '¥1,715', accuracy: '84%' },
+]
+
+const departments = [
+  'Elementary Assignment Review Dept.',
+  'Local Correspondence Office',
+  'News Bureau',
+  'Civil Documentation Dept.',
+  'Academic Review Board',
+]
+
 const initialJob = jobs[0]!
 const dailyJob = jobs[0]!
 
@@ -210,13 +225,6 @@ const payoutScore = computed(() => {
 
 const rankProgress = computed(() => Math.min(96, 38 + matchedErrors.value.length * 18))
 
-const leaderboard = [
-  { name: 'Archivist Maple', earnings: '¥2,480', accuracy: '96%' },
-  { name: 'You', earnings: '¥1,920', accuracy: '89%' },
-  { name: 'Deputy Lin', earnings: '¥1,870', accuracy: '87%' },
-  { name: 'Clerk No. 7', earnings: '¥1,715', accuracy: '84%' },
-]
-
 function resetDraft(span?: string) {
   const nextSpan = span ?? currentJob.value.selectableSpans[0]!
   selectedSpan.value = nextSpan
@@ -227,19 +235,20 @@ function resetDraft(span?: string) {
 }
 
 function startJob(jobId: string) {
-  currentJobId.value = jobId
+  const nextJob = jobs.find((job) => job.id === jobId) ?? initialJob
+  currentJobId.value = nextJob.id
   annotations.value = [
     {
       id: 1,
-      span: jobs.find((job) => job.id === jobId)?.selectableSpans[0] ?? '会意',
+      span: nextJob.selectableSpans[0]!,
       errorType: 'Wrong Character',
-      correction: jobId === 'daily-204' ? '会议' : '',
+      correction: nextJob.id === 'daily-204' ? '会议' : '',
     },
   ]
   practiceCompleted.value = []
   exerciseResult.value = ''
   showReviewLanguage.value = 'en'
-  resetDraft(jobs.find((job) => job.id === jobId)?.selectableSpans[0] ?? '会意')
+  resetDraft(nextJob.selectableSpans[0]!)
   screen.value = 'workspace'
 }
 
@@ -301,311 +310,298 @@ function completePractice(item: PracticeItem) {
 </script>
 
 <template>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <p class="eyebrow">Bianxue Bureau of Text Rectification</p>
+  <div class="board">
+    <div class="cloud cloud-a"></div>
+    <div class="cloud cloud-b"></div>
+
+    <header class="paper hero-sheet torn">
+      <span class="pin pin-blue">📌</span>
+      <span class="pin pin-red">●</span>
+      <div class="hero-copy">
+        <p class="kicker">Ministry of Everyday Corrections</p>
         <h1>Clerk Workstation</h1>
+        <p class="hero-note">
+          Short Chinese editing jobs, satirical office flavor, and quick score-and-review loops.
+        </p>
       </div>
-      <div class="status-strip">
-        <div class="status-card">
-          <span>Rank</span>
-          <strong>Assistant Editor II</strong>
-        </div>
-        <div class="status-card">
-          <span>Funds</span>
-          <strong>¥4,230</strong>
-        </div>
-        <div class="status-card">
-          <span>Daily Streak</span>
-          <strong>6 days</strong>
+      <div class="hero-side">
+        <div class="hero-stamp">Daily Pay<br />¥{{ dailyJob.payout }}</div>
+        <div class="status-ribbon">
+          <span>Rank: Assistant Editor II</span>
+          <span>Funds: ¥4,230</span>
+          <span>Streak: 6 days</span>
         </div>
       </div>
     </header>
 
-    <nav class="nav-tabs">
+    <nav class="paper nav-strip torn">
       <button :class="{ active: screen === 'dashboard' }" @click="screen = 'dashboard'">Dispatch</button>
       <button :class="{ active: screen === 'workspace' }" @click="screen = 'workspace'">Active Job</button>
       <button :class="{ active: screen === 'results' }" @click="screen = 'results'">Review</button>
       <button :class="{ active: screen === 'leaderboard' }" @click="screen = 'leaderboard'">Leaderboard</button>
+      <div class="search-strip">Queue search</div>
     </nav>
 
-    <main v-if="screen === 'dashboard'" class="dashboard">
-      <section class="hero-card paper">
-        <div>
-          <p class="eyebrow">Daily Contract</p>
-          <h2>{{ dailyJob.title }}</h2>
+    <main v-if="screen === 'dashboard'" class="page">
+      <section class="card-grid">
+        <article class="paper feature-card torn">
+          <span class="pin pin-blue">●</span>
+          <h2>Daily Contract</h2>
+          <p class="card-subtitle">{{ dailyJob.title }} · {{ dailyJob.department }}</p>
           <p>
-            Short-form bureaucratic triage with clear scoring, English-first feedback, and a bigger daily payout.
+            The high-priority assignment for today. Better payout, fixed job length, and a clear review path.
           </p>
-          <div class="hero-meta">
-            <span>{{ dailyJob.department }}</span>
+          <div class="mini-tags">
             <span>{{ dailyJob.level }}</span>
+            <span>{{ dailyJob.difficulty }}</span>
             <span>Base ¥{{ dailyJob.payout }}</span>
           </div>
-        </div>
-        <button class="cta" @click="startJob(dailyJob.id)">Start Daily Contract</button>
+          <button class="ink-button" @click="startJob(dailyJob.id)">Start Daily Contract</button>
+        </article>
+
+        <article class="paper feature-card torn accent-red">
+          <span class="pin pin-red">📌</span>
+          <h2>Department Ladder</h2>
+          <ul class="department-list">
+            <li v-for="department in departments" :key="department" :class="{ current: department.includes('Office') || department.includes('Review Dept.') }">
+              {{ department }}
+            </li>
+          </ul>
+          <div class="progress-note">
+            <span>Promotion meter</span>
+            <strong>{{ rankProgress }}%</strong>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" :style="{ width: `${rankProgress}%` }"></div>
+          </div>
+        </article>
+
+        <article class="paper feature-card torn accent-blue">
+          <span class="pin pin-blue">📌</span>
+          <h2>Practice Refunds</h2>
+          <p>Miss a correction, then earn money back with short drills after grading.</p>
+          <div class="mini-tags">
+            <span>Fill in the blank</span>
+            <span>Multiple choice</span>
+            <span>Bilingual review</span>
+          </div>
+          <button class="ghost-button" @click="screen = 'results'">Preview Review Flow</button>
+        </article>
       </section>
 
-      <section class="dashboard-grid">
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Job Queue</h3>
-            <span>3-5 min each</span>
+      <section class="bottom-layout">
+        <article class="paper wide-sheet torn">
+          <span class="pin pin-blue">●</span>
+          <div class="section-head">
+            <h2>Incoming Job Queue</h2>
+            <span>3-5 minute tasks</span>
           </div>
-          <div class="job-list">
-            <button
-              v-for="job in jobs"
-              :key="job.id"
-              class="job-card"
-              @click="startJob(job.id)"
-            >
-              <strong>{{ job.title }}</strong>
-              <span>{{ job.department }}</span>
-              <small>{{ job.difficulty }} · Base ¥{{ job.payout }}</small>
+          <div class="queue-list">
+            <button v-for="job in jobs" :key="job.id" class="queue-row" @click="startJob(job.id)">
+              <div>
+                <strong>{{ job.title }}</strong>
+                <p>{{ job.department }} · {{ job.level }}</p>
+              </div>
+              <div class="queue-meta">
+                <span>{{ job.difficulty }}</span>
+                <span>¥{{ job.payout }}</span>
+              </div>
             </button>
           </div>
         </article>
 
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Department Ladder</h3>
-            <span>Career progression</span>
+        <aside class="side-column">
+          <article class="paper memo-card torn small-note">
+            <span class="pin pin-red">●</span>
+            <h3>Today’s Focus</h3>
+            <p>Wrong Character, Word Order, and Measure Word issues are appearing often in the queue.</p>
+          </article>
+
+          <article class="paper memo-card torn small-note angle">
+            <span class="pin pin-blue">📌</span>
+            <h3>Office Notice</h3>
+            <p>This pass is visual only. Annotation selection is still mocked with clickable spans.</p>
+          </article>
+        </aside>
+      </section>
+    </main>
+
+    <main v-else-if="screen === 'workspace'" class="page">
+      <section class="workspace-layout">
+        <article class="paper board-column torn">
+          <span class="pin pin-red">●</span>
+          <div class="section-head">
+            <h2>{{ currentJob.title }}</h2>
+            <span>{{ currentJob.department }}</span>
           </div>
-          <ul class="department-list">
-            <li class="current">Elementary Assignment Review Dept.</li>
-            <li class="current">Local Correspondence Office</li>
-            <li>News Bureau</li>
-            <li>Civil Documentation Dept.</li>
-            <li>Academic Review Board</li>
+          <p class="card-subtitle">{{ currentJob.level }} · {{ currentJob.difficulty }} · Base ¥{{ currentJob.payout }}</p>
+          <ul class="scenario-list">
+            <li v-for="line in currentJob.scenario" :key="line">{{ line }}</li>
           </ul>
-          <div class="progress-block">
-            <div class="progress-label">
-              <span>Promotion meter</span>
-              <strong>{{ rankProgress }}%</strong>
-            </div>
-            <div class="progress-bar">
-              <div class="progress-fill" :style="{ width: `${rankProgress}%` }"></div>
-            </div>
+          <div class="memo-box">
+            <strong>Clerk memo</strong>
+            <p>{{ currentJob.memo }}</p>
+          </div>
+          <button class="ghost-button" @click="screen = 'dashboard'">Back to dispatch</button>
+        </article>
+
+        <article class="paper document-sheet torn">
+          <span class="pin pin-blue">📌</span>
+          <div class="section-head">
+            <h2>Document Passage</h2>
+            <span>Select candidate spans</span>
+          </div>
+          <p class="document-text">{{ currentJob.text }}</p>
+          <div class="span-palette">
+            <button
+              v-for="span in currentJob.selectableSpans"
+              :key="span"
+              :class="{ active: selectedSpan === span }"
+              @click="chooseSpan(span)"
+            >
+              {{ span }}
+            </button>
           </div>
         </article>
 
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Today’s Learning Angle</h3>
-            <span>v1 feedback focus</span>
+        <article class="paper board-column torn angle">
+          <span class="pin pin-red">📌</span>
+          <div class="section-head">
+            <h2>Annotation Editor</h2>
+            <span>1 note per mistake</span>
           </div>
-          <div class="tag-row">
-            <span>Wrong Character</span>
-            <span>Word Order</span>
-            <span>Measure Word</span>
+          <label>
+            Selected span
+            <input :value="draft.span" readonly />
+          </label>
+          <label>
+            Error type
+            <select v-model="draft.errorType">
+              <option>Wrong Character</option>
+              <option>Wrong Word Choice</option>
+              <option>Word Order Error</option>
+              <option>Missing Word</option>
+              <option>Extra Word</option>
+              <option>Grammar Pattern Error</option>
+              <option>Measure Word Error</option>
+            </select>
+          </label>
+          <label>
+            Correction
+            <input v-model="draft.correction" placeholder="Enter the corrected text" />
+          </label>
+          <div class="action-row">
+            <button class="ghost-button" @click="resetDraft(selectedSpan)">Reset</button>
+            <button class="ink-button" @click="saveAnnotation">Save Annotation</button>
           </div>
-          <p class="panel-copy">
-            This prototype emphasizes one-error-per-annotation, visible payouts, and quick review loops rather than backend scoring.
-          </p>
+          <div class="annotation-stack">
+            <div class="annotation-note" v-for="annotation in annotations" :key="annotation.id">
+              <div>
+                <strong>{{ annotation.span }}</strong>
+                <p>{{ annotation.errorType }} → {{ annotation.correction }}</p>
+              </div>
+              <div class="tiny-actions">
+                <button class="tiny-button" @click="editAnnotation(annotation)">Edit</button>
+                <button class="tiny-button alert" @click="deleteAnnotation(annotation.id)">Delete</button>
+              </div>
+            </div>
+          </div>
+          <button class="ink-button full" @click="submitJob">Submit For Grading</button>
         </article>
       </section>
     </main>
 
-    <main v-else-if="screen === 'workspace'" class="workspace">
-      <section class="panel scenario-panel">
-        <p class="eyebrow">{{ currentJob.department }}</p>
-        <h2>{{ currentJob.title }}</h2>
-        <ul class="scenario-list">
-          <li v-for="line in currentJob.scenario" :key="line">{{ line }}</li>
-        </ul>
-        <div class="memo">
-          <strong>Clerk memo</strong>
-          <p>{{ currentJob.memo }}</p>
-        </div>
-        <button class="ghost" @click="screen = 'dashboard'">Back to dispatch</button>
-      </section>
-
-      <section class="paper document-panel">
-        <div class="panel-head">
-          <h3>Document Passage</h3>
-          <span>Click candidate spans to annotate</span>
-        </div>
-        <p class="document-text">{{ currentJob.text }}</p>
-        <div class="span-picker">
-          <button
-            v-for="span in currentJob.selectableSpans"
-            :key="span"
-            :class="{ active: selectedSpan === span }"
-            @click="chooseSpan(span)"
-          >
-            {{ span }}
-          </button>
-        </div>
-      </section>
-
-      <section class="panel editor-panel">
-        <div class="panel-head">
-          <h3>Annotation Editor</h3>
-          <span>1 annotation = 1 mistake</span>
-        </div>
-        <label>
-          Selected span
-          <input :value="draft.span" readonly />
-        </label>
-        <label>
-          Error type
-          <select v-model="draft.errorType">
-            <option>Wrong Character</option>
-            <option>Wrong Word Choice</option>
-            <option>Word Order Error</option>
-            <option>Missing Word</option>
-            <option>Extra Word</option>
-            <option>Grammar Pattern Error</option>
-            <option>Measure Word Error</option>
-          </select>
-        </label>
-        <label>
-          Correction
-          <input v-model="draft.correction" placeholder="Enter the corrected text" />
-        </label>
-        <div class="editor-actions">
-          <button class="ghost" @click="resetDraft(selectedSpan)">Reset</button>
-          <button class="cta" @click="saveAnnotation">Save Annotation</button>
-        </div>
-
-        <div class="annotation-list">
-          <div class="annotation-row" v-for="annotation in annotations" :key="annotation.id">
-            <div>
-              <strong>{{ annotation.span }}</strong>
-              <p>{{ annotation.errorType }} → {{ annotation.correction }}</p>
+    <main v-else-if="screen === 'results'" class="page">
+      <section class="bottom-layout">
+        <article class="paper wide-sheet torn">
+          <span class="pin pin-blue">📌</span>
+          <div class="section-head">
+            <h2>{{ currentJob.title }} graded</h2>
+            <span>Moment of truth</span>
+          </div>
+          <div class="results-summary">
+            <div class="score-paper">
+              <strong>{{ accuracyScore }}%</strong>
+              <span>Accuracy</span>
             </div>
-            <div class="row-actions">
-              <button class="mini" @click="editAnnotation(annotation)">Edit</button>
-              <button class="mini danger" @click="deleteAnnotation(annotation.id)">Delete</button>
+            <div class="score-paper">
+              <strong>¥{{ payoutScore }}</strong>
+              <span>Final payout</span>
+            </div>
+            <div class="score-paper">
+              <strong>{{ matchedErrors.length }}/{{ currentJob.errors.length }}</strong>
+              <span>Accepted annotations</span>
             </div>
           </div>
-        </div>
-
-        <button class="submit" @click="submitJob">Submit For Grading</button>
-      </section>
-    </main>
-
-    <main v-else-if="screen === 'results'" class="results">
-      <section class="hero-card panel">
-        <div>
-          <p class="eyebrow">Moment of Truth</p>
-          <h2>{{ currentJob.title }} graded</h2>
-          <p>
-            Your prototype score blends detection, type matching, correction accuracy, and practice refunds.
-          </p>
-        </div>
-        <div class="score-badge">
-          <strong>{{ accuracyScore }}%</strong>
-          <span>Payout ¥{{ payoutScore }}</span>
-        </div>
-      </section>
-
-      <section class="results-grid">
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Breakdown</h3>
-            <span>Fair and readable</span>
-          </div>
-          <div class="metric-grid">
-            <div class="metric-card">
-              <span>Correctly found</span>
-              <strong>{{ matchedErrors.length }}</strong>
+          <div class="review-grid">
+            <div class="review-panel">
+              <h3>Breakdown</h3>
+              <p>Missed errors: {{ missedErrors.length }}</p>
+              <p>False positives: {{ falsePositives.length }}</p>
+              <p>Base fee: ¥{{ currentJob.payout }}</p>
             </div>
-            <div class="metric-card">
-              <span>Missed errors</span>
-              <strong>{{ missedErrors.length }}</strong>
-            </div>
-            <div class="metric-card">
-              <span>False positives</span>
-              <strong>{{ falsePositives.length }}</strong>
-            </div>
-            <div class="metric-card">
-              <span>Base fee</span>
-              <strong>¥{{ currentJob.payout }}</strong>
+            <div class="review-panel">
+              <h3>Explanation Language</h3>
+              <div class="language-toggle">
+                <button :class="{ active: showReviewLanguage === 'en' }" @click="showReviewLanguage = 'en'">English</button>
+                <button :class="{ active: showReviewLanguage === 'zh' }" @click="showReviewLanguage = 'zh'">中文</button>
+              </div>
             </div>
           </div>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Explanation Language</h3>
-            <span>Player override</span>
-          </div>
-          <div class="toggle-row">
-            <button :class="{ active: showReviewLanguage === 'en' }" @click="showReviewLanguage = 'en'">English</button>
-            <button :class="{ active: showReviewLanguage === 'zh' }" @click="showReviewLanguage = 'zh'">中文</button>
-          </div>
-          <div class="explanation-list">
-            <div class="explanation-card" v-for="error in currentJob.errors" :key="error.id">
+          <div class="explanation-stack">
+            <div class="review-note" v-for="error in currentJob.errors" :key="error.id">
               <strong>{{ error.incorrect }} → {{ error.correction }}</strong>
               <p>{{ showReviewLanguage === 'en' ? error.explanationEn : error.explanationZh }}</p>
             </div>
           </div>
         </article>
-      </section>
 
-      <section class="results-grid">
-        <article class="panel">
-          <div class="panel-head">
+        <aside class="side-column">
+          <article class="paper memo-card torn small-note">
+            <span class="pin pin-red">●</span>
             <h3>Missed / incorrect</h3>
-            <span>Coaching targets</span>
-          </div>
-          <div class="review-column">
-            <div v-if="missedErrors.length === 0" class="empty-state">No missed errors in this mock run.</div>
-            <div v-for="error in missedErrors" :key="error.id" class="review-card">
-              <strong>{{ error.label }}</strong>
-              <p>Expected {{ error.type }} on “{{ error.incorrect }}”.</p>
+            <div v-if="missedErrors.length === 0" class="soft-copy">No missed errors in this mock run.</div>
+            <div v-for="error in missedErrors" :key="error.id" class="review-chip">
+              {{ error.label }}
             </div>
-            <div v-for="annotation in falsePositives" :key="annotation.id" class="review-card warning">
-              <strong>False positive</strong>
-              <p>{{ annotation.span }} was not accepted as submitted.</p>
+            <div v-for="annotation in falsePositives" :key="annotation.id" class="review-chip warning">
+              False positive: {{ annotation.span }}
             </div>
-          </div>
-        </article>
+          </article>
 
-        <article class="panel">
-          <div class="panel-head">
+          <article class="paper memo-card torn small-note angle">
+            <span class="pin pin-blue">📌</span>
             <h3>Practice Refunds</h3>
-            <span>Optional reinforcement</span>
-          </div>
-          <div class="practice-list">
-            <div class="practice-card" v-for="item in practiceItems" :key="item.id">
-              <div>
-                <strong>{{ item.prompt }}</strong>
-                <p>Correct answer: {{ item.answer }}</p>
+            <div class="practice-stack">
+              <div class="practice-row" v-for="item in practiceItems" :key="item.id">
+                <div>
+                  <strong>{{ item.prompt }}</strong>
+                  <p>{{ item.answer }}</p>
+                </div>
+                <button class="tiny-button" @click="completePractice(item)">
+                  {{ practiceCompleted.includes(item.id) ? 'Done' : `+¥${item.refund}` }}
+                </button>
               </div>
-              <button class="mini" @click="completePractice(item)">
-                {{ practiceCompleted.includes(item.id) ? 'Completed' : `Earn ¥${item.refund}` }}
-              </button>
             </div>
-          </div>
-          <p class="refund-note">{{ exerciseResult || 'Complete practice to recover part of your payout loss.' }}</p>
-          <div class="editor-actions">
-            <button class="ghost" @click="screen = 'workspace'">Revise annotations</button>
-            <button class="cta" @click="screen = 'leaderboard'">View standings</button>
-          </div>
-        </article>
+            <p class="soft-copy">{{ exerciseResult || 'Complete drills to recover part of the lost payout.' }}</p>
+            <div class="action-row">
+              <button class="ghost-button" @click="screen = 'workspace'">Revise</button>
+              <button class="ink-button" @click="screen = 'leaderboard'">Standings</button>
+            </div>
+          </article>
+        </aside>
       </section>
     </main>
 
-    <main v-else class="leaderboard">
-      <section class="hero-card panel">
-        <div>
-          <p class="eyebrow">Daily and Weekly Standings</p>
-          <h2>Clerk leaderboard prototype</h2>
-          <p>Compare payout totals and accuracy rates, then jump back into the queue for another short contract.</p>
-        </div>
-        <button class="cta" @click="screen = 'dashboard'">Take another job</button>
-      </section>
-
-      <section class="dashboard-grid">
-        <article class="panel">
-          <div class="panel-head">
-            <h3>Daily Earnings</h3>
-            <span>Today</span>
+    <main v-else class="page">
+      <section class="bottom-layout">
+        <article class="paper wide-sheet torn">
+          <span class="pin pin-red">📌</span>
+          <div class="section-head">
+            <h2>Clerk Leaderboard</h2>
+            <span>Daily and weekly standings</span>
           </div>
-          <div class="leaderboard-list">
+          <div class="leaderboard-sheet">
             <div class="leader-row" v-for="entry in leaderboard" :key="entry.name">
               <strong>{{ entry.name }}</strong>
               <span>{{ entry.earnings }}</span>
@@ -614,30 +610,37 @@ function completePractice(item: PracticeItem) {
           </div>
         </article>
 
-        <article class="panel">
-          <div class="panel-head">
+        <aside class="side-column">
+          <article class="paper memo-card torn small-note">
+            <span class="pin pin-blue">●</span>
             <h3>Career Snapshot</h3>
-            <span>Persistent progression</span>
-          </div>
-          <div class="snapshot-grid">
-            <div class="metric-card">
-              <span>Jobs completed</span>
-              <strong>42</strong>
+            <div class="snapshot-grid">
+              <div class="snapshot-tile">
+                <strong>42</strong>
+                <span>Jobs completed</span>
+              </div>
+              <div class="snapshot-tile">
+                <strong>88%</strong>
+                <span>Average accuracy</span>
+              </div>
+              <div class="snapshot-tile">
+                <strong>2 / 5</strong>
+                <span>Departments unlocked</span>
+              </div>
+              <div class="snapshot-tile">
+                <strong>¥278</strong>
+                <span>Best daily payout</span>
+              </div>
             </div>
-            <div class="metric-card">
-              <span>Average accuracy</span>
-              <strong>88%</strong>
-            </div>
-            <div class="metric-card">
-              <span>Department unlocked</span>
-              <strong>2 / 5</strong>
-            </div>
-            <div class="metric-card">
-              <span>Best daily payout</span>
-              <strong>¥278</strong>
-            </div>
-          </div>
-        </article>
+          </article>
+
+          <article class="paper memo-card torn small-note angle">
+            <span class="pin pin-red">●</span>
+            <h3>Next move</h3>
+            <p>Jump back into dispatch for another short contract and a new set of mistakes to catch.</p>
+            <button class="ink-button" @click="screen = 'dashboard'">Take another job</button>
+          </article>
+        </aside>
       </section>
     </main>
   </div>
@@ -646,104 +649,250 @@ function completePractice(item: PracticeItem) {
 <style scoped>
 :global(body) {
   margin: 0;
-  font-family: Georgia, 'Times New Roman', serif;
+  font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  color: #36506f;
   background:
-    radial-gradient(circle at top left, rgba(145, 45, 35, 0.18), transparent 28%),
-    linear-gradient(180deg, #d8c6a4 0%, #c4ae87 100%);
-  color: #2f2418;
+    radial-gradient(circle at 10% 10%, rgba(255, 255, 255, 0.35), transparent 8rem),
+    radial-gradient(circle at 80% 4%, rgba(255, 255, 255, 0.28), transparent 9rem),
+    linear-gradient(180deg, #8cc8f2 0%, #cfe7fb 55%, #dfeefb 100%);
 }
 
 :global(*) {
   box-sizing: border-box;
 }
 
-.app-shell {
+.board {
+  position: relative;
   min-height: 100vh;
-  padding: 24px;
-  background:
-    linear-gradient(135deg, rgba(74, 52, 31, 0.18), transparent 35%),
-    linear-gradient(0deg, rgba(255, 248, 232, 0.4), rgba(255, 248, 232, 0.4));
+  padding: 2.5rem 1.25rem 3rem;
+  overflow: hidden;
 }
 
-.topbar,
-.hero-card,
-.panel,
-.paper {
-  border: 1px solid rgba(72, 48, 29, 0.18);
-  box-shadow: 0 18px 40px rgba(76, 47, 29, 0.12);
+.cloud {
+  position: absolute;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  filter: blur(2px);
 }
 
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: center;
-  padding: 20px 24px;
-  border-radius: 20px;
-  background: rgba(248, 241, 228, 0.92);
+.cloud::before,
+.cloud::after {
+  content: '';
+  position: absolute;
+  border-radius: 999px;
+  background: inherit;
 }
 
-.eyebrow {
-  margin: 0 0 6px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-size: 0.72rem;
-  color: #8a3d2f;
+.cloud-a {
+  top: 1.25rem;
+  left: 2rem;
+  width: 9rem;
+  height: 3.5rem;
 }
 
-h1,
-h2,
-h3,
-p {
-  margin-top: 0;
+.cloud-a::before {
+  width: 4.5rem;
+  height: 4.5rem;
+  left: 1rem;
+  top: -1.25rem;
 }
 
-h1 {
-  margin-bottom: 0;
-  font-size: clamp(2rem, 4vw, 3rem);
+.cloud-a::after {
+  width: 5rem;
+  height: 4rem;
+  right: 0.5rem;
+  top: -0.75rem;
 }
 
-.status-strip {
+.cloud-b {
+  top: 0.25rem;
+  right: 4rem;
+  width: 10rem;
+  height: 4rem;
+}
+
+.cloud-b::before {
+  width: 5rem;
+  height: 5rem;
+  left: 1rem;
+  top: -1.75rem;
+}
+
+.cloud-b::after {
+  width: 4rem;
+  height: 4rem;
+  right: 1rem;
+  top: -0.75rem;
+}
+
+.page,
+.card-grid,
+.bottom-layout,
+.workspace-layout,
+.side-column,
+.annotation-stack,
+.practice-stack,
+.explanation-stack,
+.queue-list,
+.leaderboard-sheet,
+.snapshot-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(120px, 1fr));
-  gap: 12px;
-  width: min(100%, 460px);
+  gap: 1.25rem;
 }
 
-.status-card,
-.metric-card {
-  padding: 14px;
-  border-radius: 14px;
-  background: #f3ebdc;
+.paper {
+  position: relative;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(248, 252, 255, 0.9)),
+    repeating-linear-gradient(
+      -35deg,
+      rgba(101, 157, 210, 0.03),
+      rgba(101, 157, 210, 0.03) 14px,
+      rgba(255, 255, 255, 0.05) 14px,
+      rgba(255, 255, 255, 0.05) 28px
+    );
+  border-radius: 0.9rem;
+  box-shadow:
+    0 14px 28px rgba(69, 114, 156, 0.15),
+    0 2px 0 rgba(255, 255, 255, 0.8) inset;
+  padding: 1.5rem;
 }
 
-.status-card span,
-.metric-card span,
-.panel-head span,
-.hero-meta span,
-.leader-row small {
-  display: block;
-  font-size: 0.82rem;
-  color: #76563f;
+.torn::before,
+.torn::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 12px;
+  background:
+    radial-gradient(circle at 8px 0, transparent 8px, rgba(255, 255, 255, 0.9) 8px) repeat-x;
+  background-size: 22px 12px;
+  pointer-events: none;
 }
 
-.status-card strong,
-.metric-card strong {
-  display: block;
-  margin-top: 4px;
-  font-size: 1.05rem;
+.torn::before {
+  top: -6px;
 }
 
-.nav-tabs {
+.torn::after {
+  bottom: -6px;
+  transform: rotate(180deg);
+}
+
+.pin {
+  position: absolute;
+  top: -0.7rem;
+  font-size: 1.15rem;
+  text-shadow: 0 6px 8px rgba(40, 70, 103, 0.22);
+}
+
+.pin-blue {
+  left: 1rem;
+  color: #3496eb;
+}
+
+.pin-red {
+  right: 1.2rem;
+  color: #ff655f;
+}
+
+.hero-sheet {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+  max-width: 1180px;
+  margin: 0 auto 1rem;
+  padding: 2rem;
+}
+
+.hero-copy h1,
+.section-head h2,
+.feature-card h2,
+.memo-card h3 {
+  margin: 0;
+  font-family: 'Brush Script MT', 'Segoe Print', cursive;
+  font-weight: 400;
+  color: #3a5d92;
+}
+
+.hero-copy h1 {
+  font-size: clamp(2.4rem, 5vw, 4rem);
+}
+
+.hero-copy .kicker {
+  margin: 0 0 0.35rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #ef5a55;
+  font-size: 0.75rem;
+}
+
+.hero-note,
+.card-subtitle,
+.soft-copy,
+.memo-box p,
+.queue-row p,
+.review-note p,
+.practice-row p,
+.annotation-note p {
+  color: #6d87a2;
+}
+
+.hero-side {
+  display: grid;
+  gap: 1rem;
+  align-content: center;
+}
+
+.hero-stamp {
+  justify-self: end;
+  width: 8.5rem;
+  padding: 1rem;
+  border: 3px dashed rgba(239, 90, 85, 0.45);
+  border-radius: 0.8rem;
+  text-align: center;
+  color: #ef5a55;
+  font-weight: 700;
+  transform: rotate(-4deg);
+}
+
+.status-ribbon {
   display: flex;
-  gap: 10px;
-  margin: 20px 0;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: flex-end;
 }
 
-button {
+.status-ribbon span,
+.mini-tags span,
+.queue-meta span,
+.review-chip {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(95, 180, 239, 0.12);
+  color: #3b6b98;
+  font-size: 0.9rem;
+}
+
+.nav-strip {
+  max-width: 1180px;
+  margin: 0 auto 1.5rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 1rem 1.25rem;
+}
+
+.nav-strip button,
+.ink-button,
+.ghost-button,
+.tiny-button,
+.language-toggle button,
+.span-palette button {
   border: 0;
   border-radius: 999px;
-  padding: 12px 18px;
   font: inherit;
   cursor: pointer;
   transition:
@@ -752,250 +901,344 @@ button {
     color 140ms ease;
 }
 
-button:hover {
+.nav-strip button:hover,
+.ink-button:hover,
+.ghost-button:hover,
+.tiny-button:hover,
+.language-toggle button:hover,
+.span-palette button:hover {
   transform: translateY(-1px);
 }
 
-.nav-tabs button,
-.ghost,
-.mini {
-  background: rgba(248, 241, 228, 0.88);
-  color: #4d3323;
+.nav-strip button,
+.ghost-button,
+.language-toggle button,
+.span-palette button,
+.tiny-button {
+  padding: 0.7rem 1rem;
+  background: rgba(101, 170, 223, 0.12);
+  color: #3d6892;
 }
 
-.nav-tabs .active,
-.toggle-row .active,
-.span-picker .active {
-  background: #8f3327;
-  color: #fff7ed;
+.nav-strip button.active,
+.language-toggle button.active,
+.span-palette button.active {
+  background: #4aa4ec;
+  color: white;
 }
 
-.cta,
-.submit {
-  background: #8f3327;
-  color: #fff7ed;
+.search-strip {
+  margin-left: auto;
+  min-width: 9rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  color: #98adbf;
+  text-align: center;
 }
 
-.submit {
-  width: 100%;
-  margin-top: 16px;
+.card-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  max-width: 1180px;
+  margin: 0 auto;
 }
 
-.danger {
-  color: #8f3327;
+.feature-card,
+.memo-card {
+  min-height: 16rem;
 }
 
-.dashboard,
-.results,
-.leaderboard {
-  display: grid;
-  gap: 20px;
+.accent-red h2,
+.accent-red .pin {
+  color: #ef5a55;
 }
 
-.workspace {
-  display: grid;
-  grid-template-columns: 0.9fr 1.3fr 1fr;
-  gap: 20px;
+.accent-blue h2 {
+  color: #3a9ae0;
 }
 
-.hero-card,
-.panel,
-.paper {
-  border-radius: 22px;
-  padding: 22px;
-  background: rgba(249, 244, 234, 0.92);
-}
-
-.hero-card {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.hero-meta,
-.tag-row,
-.toggle-row,
-.editor-actions,
-.row-actions,
-.span-picker {
+.mini-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.5rem;
+  margin: 1rem 0 1.25rem;
 }
 
-.hero-meta span,
-.tag-row span {
-  padding: 8px 12px;
-  border-radius: 999px;
-  background: #efe3cf;
+.ink-button {
+  padding: 0.8rem 1.2rem;
+  background: #ef5a55;
+  color: white;
 }
 
-.dashboard-grid,
-.results-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+.ghost-button {
+  padding: 0.8rem 1.2rem;
 }
 
-.results-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+.bottom-layout {
+  grid-template-columns: 2fr 0.95fr;
+  max-width: 1180px;
+  margin: 1.5rem auto 0;
+  align-items: start;
 }
 
-.panel-head {
+.wide-sheet {
+  min-height: 20rem;
+}
+
+.small-note {
+  min-height: 10rem;
+}
+
+.angle {
+  transform: rotate(-1.2deg);
+}
+
+.section-head {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
-  align-items: baseline;
-  margin-bottom: 16px;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1rem;
 }
 
-.job-list,
-.annotation-list,
-.practice-list,
-.leaderboard-list,
-.review-column,
-.explanation-list {
-  display: grid;
-  gap: 12px;
+.section-head span {
+  color: #88a6c0;
+  font-size: 0.95rem;
 }
 
-.job-card,
-.annotation-row,
-.practice-card,
+.queue-row,
 .leader-row,
-.review-card,
-.explanation-card {
-  width: 100%;
-  text-align: left;
-  border-radius: 16px;
-  padding: 16px;
-  background: #f5ede0;
-}
-
-.annotation-row,
-.practice-card,
-.leader-row {
+.practice-row,
+.annotation-note {
   display: flex;
   justify-content: space-between;
-  gap: 12px;
+  gap: 1rem;
   align-items: center;
+}
+
+.queue-row {
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: 0;
+  border-radius: 1rem;
+  background: rgba(78, 161, 229, 0.08);
+  text-align: left;
+  cursor: pointer;
+}
+
+.queue-row strong,
+.leader-row strong,
+.annotation-note strong,
+.practice-row strong,
+.review-note strong,
+.score-paper strong,
+.snapshot-tile strong {
+  color: #3d5f8a;
+}
+
+.queue-row p,
+.review-note p,
+.practice-row p,
+.annotation-note p {
+  margin: 0.25rem 0 0;
 }
 
 .department-list,
 .scenario-list {
   margin: 0;
-  padding-left: 18px;
-  display: grid;
-  gap: 8px;
+  padding-left: 1.15rem;
+  color: #54779a;
+}
+
+.department-list li + li,
+.scenario-list li + li {
+  margin-top: 0.45rem;
 }
 
 .department-list .current {
-  color: #8f3327;
-  font-weight: 700;
+  color: #ef5a55;
 }
 
-.progress-block,
-.memo {
-  margin-top: 18px;
-}
-
-.progress-label {
+.progress-note {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin: 1rem 0 0.55rem;
+  color: #6d87a2;
 }
 
-.progress-bar {
-  height: 14px;
+.progress-track {
+  height: 0.8rem;
   border-radius: 999px;
-  background: #e5d5bc;
+  background: rgba(74, 164, 236, 0.14);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #8f3327, #be6d34);
+  background: linear-gradient(90deg, #ef5a55, #4aa4ec);
+}
+
+.workspace-layout {
+  grid-template-columns: 0.95fr 1.35fr 1fr;
+  max-width: 1180px;
+  margin: 0 auto;
+  align-items: start;
+}
+
+.board-column,
+.document-sheet {
+  min-height: 33rem;
+}
+
+.memo-box,
+.review-panel,
+.score-paper,
+.snapshot-tile {
+  padding: 1rem;
+  border-radius: 1rem;
+  background: rgba(80, 173, 240, 0.08);
 }
 
 .document-text {
-  padding: 22px;
-  min-height: 220px;
-  border-radius: 18px;
-  line-height: 1.9;
-  font-size: 1.15rem;
+  min-height: 16rem;
+  padding: 1.4rem;
+  border-radius: 1rem;
   background:
-    linear-gradient(transparent 95%, rgba(102, 68, 41, 0.18) 95%),
-    #fff8ec;
-  background-size: 100% 2.1rem;
+    linear-gradient(transparent calc(100% - 1px), rgba(95, 164, 221, 0.18) 0) 0 0 / 100% 2.1rem,
+    rgba(255, 255, 255, 0.9);
+  color: #355575;
+  font-size: 1.2rem;
+  line-height: 1.75;
+}
+
+.span-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
 }
 
 label {
   display: grid;
-  gap: 8px;
-  margin-bottom: 14px;
-  font-size: 0.95rem;
+  gap: 0.45rem;
+  margin-bottom: 0.9rem;
+  color: #6281a0;
 }
 
 input,
 select {
   width: 100%;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid rgba(86, 60, 39, 0.2);
-  background: #fff8ec;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid rgba(92, 152, 201, 0.2);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.86);
+  color: #36506f;
   font: inherit;
 }
 
-.score-badge {
-  min-width: 180px;
-  padding: 20px;
-  border-radius: 18px;
+.action-row,
+.tiny-actions,
+.language-toggle,
+.results-summary,
+.review-grid {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.annotation-stack {
+  margin: 1rem 0;
+}
+
+.annotation-note,
+.review-note,
+.practice-row,
+.leader-row {
+  padding: 0.95rem 1rem;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.tiny-button {
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+}
+
+.tiny-button.alert,
+.review-chip.warning {
+  color: #ef5a55;
+}
+
+.full {
+  width: 100%;
+}
+
+.results-summary {
+  margin: 1rem 0 1.25rem;
+}
+
+.score-paper {
+  min-width: 10rem;
   text-align: center;
-  background: #8f3327;
-  color: #fff7ed;
 }
 
-.score-badge strong {
+.score-paper strong {
   display: block;
-  font-size: 2.2rem;
+  font-size: 2rem;
 }
 
-.metric-grid,
+.review-grid {
+  margin-bottom: 1rem;
+}
+
+.review-panel {
+  flex: 1 1 15rem;
+}
+
+.practice-stack,
+.explanation-stack {
+  margin-top: 0.85rem;
+}
+
+.review-chip {
+  display: inline-flex;
+  margin: 0.35rem 0.35rem 0 0;
+}
+
+.leaderboard-sheet {
+  margin-top: 1rem;
+}
+
 .snapshot-grid {
-  display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
 }
 
-.review-card.warning {
-  border: 1px dashed #8f3327;
+.snapshot-tile {
+  text-align: center;
 }
 
-.empty-state,
-.refund-note,
-.panel-copy {
-  color: #654a37;
+.snapshot-tile span {
+  display: block;
+  margin-top: 0.35rem;
+  color: #6d87a2;
 }
 
-@media (max-width: 1100px) {
-  .workspace,
-  .dashboard-grid,
-  .results-grid {
+@media (max-width: 980px) {
+  .hero-sheet,
+  .card-grid,
+  .bottom-layout,
+  .workspace-layout {
     grid-template-columns: 1fr;
   }
 
-  .topbar,
-  .hero-card,
-  .annotation-row,
-  .practice-card,
-  .leader-row {
-    align-items: flex-start;
-    flex-direction: column;
+  .hero-side,
+  .status-ribbon {
+    justify-content: start;
   }
 
-  .status-strip {
+  .search-strip {
+    margin-left: 0;
     width: 100%;
   }
 }
