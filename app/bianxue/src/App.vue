@@ -869,7 +869,7 @@ function completePractice(item: PracticeItem) {
 .queue-meta span,
 .review-chip {
   padding: 0.4rem 0.75rem;
-  border-radius: 999px;
+  border-radius: 0.3rem;
   background: rgba(95, 180, 239, 0.12);
   color: #3b6b98;
   font-size: 0.9rem;
@@ -892,7 +892,7 @@ function completePractice(item: PracticeItem) {
 .language-toggle button,
 .span-palette button {
   border: 0;
-  border-radius: 999px;
+  border-radius: 0.3rem;
   font: inherit;
   cursor: pointer;
   transition:
@@ -931,7 +931,7 @@ function completePractice(item: PracticeItem) {
   margin-left: auto;
   min-width: 9rem;
   padding: 0.7rem 1rem;
-  border-radius: 999px;
+  border-radius: 0.3rem;
   background: rgba(255, 255, 255, 0.72);
   color: #98adbf;
   text-align: center;
@@ -1020,7 +1020,7 @@ function completePractice(item: PracticeItem) {
   width: 100%;
   padding: 1rem 1.1rem;
   border: 0;
-  border-radius: 1rem;
+  border-radius: 0.32rem;
   background: rgba(78, 161, 229, 0.08);
   text-align: left;
   cursor: pointer;
@@ -1068,7 +1068,7 @@ function completePractice(item: PracticeItem) {
 
 .progress-track {
   height: 0.8rem;
-  border-radius: 999px;
+  border-radius: 0.2rem;
   background: rgba(74, 164, 236, 0.14);
   overflow: hidden;
 }
@@ -1096,14 +1096,14 @@ function completePractice(item: PracticeItem) {
 .score-paper,
 .snapshot-tile {
   padding: 1rem;
-  border-radius: 1rem;
+  border-radius: 0.32rem;
   background: rgba(80, 173, 240, 0.08);
 }
 
 .document-text {
   min-height: 16rem;
   padding: 1.4rem;
-  border-radius: 1rem;
+  border-radius: 0.32rem;
   background:
     linear-gradient(transparent calc(100% - 1px), rgba(95, 164, 221, 0.18) 0) 0 0 / 100% 2.1rem,
     rgba(255, 255, 255, 0.9);
@@ -1131,7 +1131,7 @@ select {
   width: 100%;
   padding: 0.85rem 0.95rem;
   border: 1px solid rgba(92, 152, 201, 0.2);
-  border-radius: 1rem;
+  border-radius: 0.25rem;
   background: rgba(255, 255, 255, 0.86);
   color: #36506f;
   font: inherit;
@@ -1156,7 +1156,7 @@ select {
 .practice-row,
 .leader-row {
   padding: 0.95rem 1rem;
-  border-radius: 1rem;
+  border-radius: 0.32rem;
   background: rgba(255, 255, 255, 0.76);
 }
 
